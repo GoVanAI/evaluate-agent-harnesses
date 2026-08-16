@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evaluate Agent Harnesses"
+  short_description: "Benchmark CLI harnesses across backend models"
+  default_prompt: "Use $evaluate-agent-harnesses to inspect this Claude Code suite, pin its reviewed backend model, dry-run it, and calibrate variants with protected graders."

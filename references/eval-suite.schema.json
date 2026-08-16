@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/evaluate-agent-harnesses/eval-suite.schema.json",
+  "title": "Vendor-neutral agent harness evaluation suite",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "name", "variants", "cases"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout_ms": { "type": "integer", "minimum": 1 },
+        "grader_timeout_ms": { "type": "integer", "minimum": 1 },
+        "kill_grace_ms": { "type": "integer", "minimum": 0 },
+        "runs": { "type": "integer", "minimum": 1 },
+        "max_capture_bytes": { "type": "integer", "minimum": 1024 }
+      }
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/variant" }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$" },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "provider"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "provider": { "enum": ["codex", "claude", "custom"] },
+        "command": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "env": { "type": "object", "additionalProperties": { "type": "string" } },
+        "timeout_ms": { "type": "integer", "minimum": 1 },
+        "runs": { "type": "integer", "minimum": 1 },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\\s\\u0000-\\u001F\\u007F]+$",
+          "description": "Exact backend model identifier for Codex or Claude CLI adapters; decorated display labels are rejected by runtime validation."
+        },
+        "sandbox": { "enum": ["read-only", "workspace-write"] },
+        "json": { "type": "boolean" },
+        "skip_git_repo_check": { "type": "boolean" },
+        "permission_mode": { "enum": ["acceptEdits", "auto", "bypassPermissions", "manual", "dontAsk", "plan"] },
+        "output_format": { "enum": ["text", "json", "stream-json"] }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fixture", "prompt", "graders"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "fixture": { "type": "string", "minLength": 1 },
+        "prompt": { "type": "string", "minLength": 1 },
+        "minimum_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "runs": { "type": "integer", "minimum": 1 },
+        "timeout_ms": { "type": "integer", "minimum": 1 },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "graders": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/grader" }
+        }
+      }
+    },
+    "grader": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": {
+          "enum": [
+            "process_exit",
+            "file_exists",
+            "file_not_exists",
+            "file_contains",
+            "stdout_contains",
+            "trace_command_forbidden",
+            "command"
+          ]
+        },
+        "hard_gate": { "type": "boolean" },
+        "weight": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}
